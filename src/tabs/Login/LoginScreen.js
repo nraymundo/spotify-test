@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     borderRadius: 80,
   },
   detailsContainer: {
-    // flex: 1,
     paddingTop: 20,
   },
   displayName: {
