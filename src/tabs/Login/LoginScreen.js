@@ -13,7 +13,8 @@ const discovery = {
 };
 
 export default function LoginScreen({
-  setIsLoggedIn, setTopArtists, setTopTracks6Months, setRecentlyPlayed, setTopTrack4Months, setTopTracksAllTime,
+  setIsLoggedIn, setTopArtists4Weeks, setTopArtists6Months, setTopArtistsAllTime, 
+  setTopTrack4Weeks, setTopTracks6Months, setTopTracksAllTime, setRecentlyPlayed,
 }) {
   const [token, setToken] = useState('');
   const [userInfo, setUserInfo] = useState(null);
@@ -67,7 +68,7 @@ export default function LoginScreen({
           console.log("error", error.message);
         });
       axios(
-        "https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=20", {
+        "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=20", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -76,7 +77,7 @@ export default function LoginScreen({
         },
       })
         .then((response) => {
-          setTopTracks6Months(response.data.items.map(item => {
+          setTopTrack4Weeks(response.data.items.map(item => {
             return {
               name: item.name,
               image: item.album.images[1].url,
@@ -88,7 +89,7 @@ export default function LoginScreen({
           console.log("error", error.message);
         });
       axios(
-        "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=20", {
+        "https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=20", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -97,7 +98,7 @@ export default function LoginScreen({
         },
       })
         .then((response) => {
-          setTopTrack4Months(response.data.items.map(item => {
+          setTopTracks6Months(response.data.items.map(item => {
             return {
               name: item.name,
               image: item.album.images[1].url,
@@ -130,7 +131,7 @@ export default function LoginScreen({
           console.log("error", error.message);
         });
       axios(
-        "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=20", {
+        "https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=20", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -139,7 +140,7 @@ export default function LoginScreen({
         },
       })
         .then((response) => {
-          setTopArtists(response.data.items.map(item => {
+          setTopArtists4Weeks(response.data.items.map(item => {
             return {
               name: item.name,
               image: item.images[2].url,
@@ -150,32 +151,74 @@ export default function LoginScreen({
         .catch((error) => {
           console.log("error", error.message);
         });
-        axios(
-          "https://api.spotify.com/v1/me/player/recently-played?limit=10", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
+      axios(
+        "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=20", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          setTopArtists6Months(response.data.items.map(item => {
+            return {
+              name: item.name,
+              image: item.images[2].url,
+              url: item.external_urls.spotify,
+            }
+          }));
         })
-          .then((response) => {
-            setRecentlyPlayed(response.data.items.map(item => {
-              const artists = [];
-              item.track.artists.map(artist => {
-                artists.push(artist.name);
-              });
-              return {
-                name: item.track.name,
-                image: item.track.album.images[1].url,
-                artist: artists,
-                url: item.track.external_urls.spotify,
-              }
-            }));
-          })
-          .catch((error) => {
-            console.log("error", error.message);
-          });
+        .catch((error) => {
+          console.log("error", error.message);
+        });
+      axios(
+        "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=20", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          setTopArtistsAllTime(response.data.items.map(item => {
+            return {
+              name: item.name,
+              image: item.images[2].url,
+              url: item.external_urls.spotify,
+            }
+          }));
+        })
+        .catch((error) => {
+          console.log("error", error.message);
+        });
+      axios(
+        "https://api.spotify.com/v1/me/player/recently-played?limit=10", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          setRecentlyPlayed(response.data.items.map(item => {
+            const artists = [];
+            item.track.artists.map(artist => {
+              artists.push(artist.name);
+            });
+            return {
+              name: item.track.name,
+              image: item.track.album.images[1].url,
+              artist: artists,
+              url: item.track.external_urls.spotify,
+            }
+          }));
+        })
+        .catch((error) => {
+          console.log("error", error.message);
+        });
     }
   }, [token]);
 

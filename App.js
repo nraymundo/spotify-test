@@ -6,6 +6,7 @@ import { useState } from "react";
 import HomeScreen from './src/tabs/Home/HomeScreen';
 import LoginScreen from './src/tabs/Login/LoginScreen';
 import TopTracksScreen from './src/windows/TopTracks/TopTracksScreen';
+import TopArtistsScreen from './src/windows/TopArtists/TopArtistsScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Tab = createBottomTabNavigator();
@@ -13,9 +14,11 @@ const Tab = createBottomTabNavigator();
 const MainStack = createNativeStackNavigator();
 
 function MyTabs() {
-  const [topArtists, setTopArtists] = useState([]);
+  const [topArtists4Weeks, setTopArtists4Weeks] = useState([]);
+  const [topArtists6Months, setTopArtists6Months] = useState([]);
+  const [topArtistsAllTime, setTopArtistsAllTime] = useState([]);
   const [topTracks6Months, setTopTracks6Months] = useState([]);
-  const [topTracks4Months, setTopTrack4Months] = useState([]);
+  const [topTracks4Weeks, setTopTrack4Weeks] = useState([]);
   const [topTracksAllTime, setTopTracksAllTime] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,8 +40,10 @@ function MyTabs() {
         children={() => (
           <LoginScreen
             setIsLoggedIn={setIsLoggedIn}
-            setTopArtists={setTopArtists}
-            setTopTrack4Months={setTopTrack4Months}
+            setTopArtists4Weeks={setTopArtists4Weeks}
+            setTopArtists6Months={setTopArtists6Months}
+            setTopArtistsAllTime={setTopArtistsAllTime}
+            setTopTrack4Weeks={setTopTrack4Weeks}
             setTopTracksAllTime={setTopTracksAllTime}
             setTopTracks6Months={setTopTracks6Months}
             setRecentlyPlayed={setRecentlyPlayed}
@@ -65,13 +70,31 @@ function MyTabs() {
               name="Main" 
               children={() => (
                 <HomeScreen
-                  topArtists={topArtists}
+                  topArtists4Weeks={topArtists4Weeks}
+                  topArtists6Months={topArtists6Months}
+                  topArtistsAllTime={topArtistsAllTime}
                   topTracks6Months={topTracks6Months}
-                  topTracks4Months={topTracks4Months}
+                  topTracks4Weeks={topTracks4Weeks}
                   topTracksAllTime={topTracksAllTime}
                   recentlyPlayed={recentlyPlayed}
                 />
               )}
+            />
+            <MainStack.Screen
+              name="Top Artists"
+              component={TopArtistsScreen}
+              options={{
+                headerShown: true,
+                title: 'Your top artists',
+                headerStyle: {
+                  backgroundColor: '#121212',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontSize: 22,
+                  fontWeight: 'bold',
+                },
+              }}
             />
             <MainStack.Screen
               name="Top Tracks"

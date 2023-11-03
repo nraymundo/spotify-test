@@ -10,27 +10,28 @@ import {
 import CardCarousel from '../../components/CardCarousel';
 import { useState } from "react";
 
-function TopTracksComponent({ topTracks, dateFilter }) {
+function TopArtistsComponent({ topArtists, dateFilter }) {
   return (
-    <View style={styles.topTracksContainer}>
-      <View style={styles.topTracksHeaderContainer}>
-        <Text style={styles.topTracksDateFilterHeader}>{dateFilter}</Text>
+    <View style={styles.topArtistsContainer}>
+      <View style={styles.topArtistsHeaderContainer}>
+        {/* <Text style={styles.topTracksHeader}>Your top tracks</Text> */}
+        <Text style={styles.topArtistsDateFilterHeader}>{dateFilter}</Text>
       </View>
       <CardCarousel
-        list={topTracks}
+        list={topArtists}
       />
     </View>
   )
 }
 
-export default function TopTracksScreen({ route }) {
-  const { topTracks4Weeks, topTracks6Months, topTracksAllTime } = route.params;
+export default function TopArtistsScreen({ route }) {
+  const { topArtists4Weeks, topArtists6Months, topArtistsAllTime } = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopTracksComponent topTracks={topTracks4Weeks} dateFilter='Last 4 weeks' />
-      <TopTracksComponent topTracks={topTracks6Months} dateFilter='Last 6 months' />
-      <TopTracksComponent topTracks={topTracksAllTime} dateFilter='All time' />
+      <TopArtistsComponent topArtists={topArtists4Weeks} dateFilter='Last 4 weeks' />
+      <TopArtistsComponent topArtists={topArtists6Months} dateFilter='Last 6 months' />
+      <TopArtistsComponent topArtists={topArtistsAllTime} dateFilter='All time' />
     </SafeAreaView>
   );
 }
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
   },
-  topTracksContainer: {
+  topArtistsContainer: {
     gap: 10,
     height: 200,
     paddingTop: 20,
@@ -48,18 +49,18 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingTop: 20,
   },
-  topTracksHeaderContainer: {
+  topArtistsHeaderContainer: {
     paddingLeft: 20,
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
-  topTracksHeader: {
+  topArtistsHeader: {
     fontSize: 25,
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  topTracksDateFilterHeader: {
+  topArtistsDateFilterHeader: {
     fontSize: 15,
     color: '#b3b3b3',
   },

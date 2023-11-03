@@ -3,14 +3,21 @@ import TopArtistsCarousel from './components/TopArtistsCarousel';
 import TopTracksCarousel from './components/TopTracksCarousel';
 import RecentlyPlayedCarousel from './components/RecentlyPlayedCarousel';
 
-export default function HomeScreen({topArtists, topTracks6Months, recentlyPlayed, topTracks4Months, topTracksAllTime}) {
+export default function HomeScreen({
+  topArtists4Weeks, topArtists6Months, topArtistsAllTime, topTracks6Months,
+  recentlyPlayed, topTracks4Weeks, topTracksAllTime,
+}) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topArtistsContainer}>
-        <TopArtistsCarousel topArtists={topArtists}/>
+        <TopArtistsCarousel
+          topArtists4Weeks={topArtists4Weeks} topArtists6Months={topArtists6Months} topArtistsAllTime={topArtistsAllTime}
+        />
       </View>
       <View style={styles.topTracksContainer}>
-        <TopTracksCarousel topTracks6Months={topTracks6Months} topTracks4Months={topTracks4Months} topTracksAllTime={topTracksAllTime}/>
+        <TopTracksCarousel
+          topTracks4Weeks={topTracks4Weeks} topTracks6Months={topTracks6Months} topTracksAllTime={topTracksAllTime}
+        />
       </View>
       <View style={styles.recentlyPlayedContainer}>
         <RecentlyPlayedCarousel recentlyPlayed={recentlyPlayed}/>
