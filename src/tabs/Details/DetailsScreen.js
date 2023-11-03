@@ -1,5 +1,4 @@
-import { View, Button, Text, StyleSheet } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { View, Text, StyleSheet } from "react-native";
 
 export default function DetailsScreen() {
   return (
