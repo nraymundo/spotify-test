@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import CardCarousel from '../../../components/CardCarousel';
+import { useNavigation } from '@react-navigation/native';
 
-export default function TopTracksCarousel({topTracks}) {
+export default function TopTracksCarousel({topTracks6Months, topTracks4Months, topTracksAllTime}) {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <View style={styles.topTracksHeaderContainer}>
-        <Text style={styles.topTracksHeader}>
-          Your top tracks
-        </Text>
+        <Pressable onPress={() => navigation.navigate('Top Tracks', { topTracks6Months: topTracks6Months, topTracks4Months: topTracks4Months, topTracksAllTime: topTracksAllTime })}>
+          <Text style={styles.topTracksHeader}>Your top tracks</Text>
+        </Pressable>
       </View>
       <CardCarousel
-        list={topTracks}
+        list={topTracks6Months}
       />
     </View>
   );

@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Text, Pressable, Image, TouchableOpacity, Linking } from "react-native";
-import { Button } from "react-native-elements";
 import { useEffect, useState } from "react";
 import { ResponseType, useAuthRequest } from "expo-auth-session";
 import axios from "axios";
@@ -14,11 +13,10 @@ const discovery = {
 };
 
 export default function LoginScreen({
-  setIsLoggedIn, setTopArtists, setTopTracks, setRecentlyPlayed,
+  setIsLoggedIn, setTopArtists, setTopTracks6Months, setRecentlyPlayed, setTopTrack4Months, setTopTracksAllTime,
 }) {
   const [token, setToken] = useState('');
   const [userInfo, setUserInfo] = useState(null);
-  const [genres, setGenres] = useState({});
   const [request, response, promptAsync] = useAuthRequest(
     {
       responseType: ResponseType.Token,
@@ -78,7 +76,49 @@ export default function LoginScreen({
         },
       })
         .then((response) => {
-          setTopTracks(response.data.items.map(item => {
+          setTopTracks6Months(response.data.items.map(item => {
+            return {
+              name: item.name,
+              image: item.album.images[1].url,
+              url: item.external_urls.spotify,
+            }
+          }));
+        })
+        .catch((error) => {
+          console.log("error", error.message);
+        });
+      axios(
+        "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=20", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          setTopTrack4Months(response.data.items.map(item => {
+            return {
+              name: item.name,
+              image: item.album.images[1].url,
+              url: item.external_urls.spotify,
+            }
+          }));
+        })
+        .catch((error) => {
+          console.log("error", error.message);
+        });
+      axios(
+        "https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=20", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          setTopTracksAllTime(response.data.items.map(item => {
             return {
               name: item.name,
               image: item.album.images[1].url,
@@ -120,9 +160,6 @@ export default function LoginScreen({
           },
         })
           .then((response) => {
-            // console.log(response.data.items[0].track.name);
-            // console.log(response.data.items[0].track.artists);
-            // console.log(response.data.items[0].track.album.images);
             setRecentlyPlayed(response.data.items.map(item => {
               const artists = [];
               item.track.artists.map(artist => {
