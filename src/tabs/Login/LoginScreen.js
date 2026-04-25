@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Text, Pressable, Image, TouchableOpacity, Linking } from "react-native";
 import { useEffect, useState } from "react";
-import { ResponseType, useAuthRequest } from "expo-auth-session";
+import { ResponseType, useAuthRequest, makeRedirectUri } from "expo-auth-session";
 import axios from "axios";
 
 const discovery = {
@@ -33,7 +33,7 @@ export default function LoginScreen({
         "user-read-private",
       ],
       usePKCE: false,
-      redirectUri: "exp://192.168.10.228:8081",
+      redirectUri: makeRedirectUri({ scheme: "com.nraymundo.spotifystats", path: "callback" }),
     },
     discovery
   );
