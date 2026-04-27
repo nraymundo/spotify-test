@@ -1,12 +1,32 @@
-// Supabase project config + helpers for talking to Edge Functions.
-// The publishable key is safe to expose in the mobile app — it can only do
-// what Row Level Security policies permit, and we have RLS enabled with no
-// public policies on the connections / plays tables. All real work happens
-// server-side via Edge Functions which use a secret key internally.
+import { createClient } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const SUPABASE_URL = "https://kbllcjqtpjltuilibiek.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_XcUdP1QOWgckSGrv9MHp1w_wRECP6S0";
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
+
+// Auth helpers
+export const signUp = (email, password) =>
+  supabase.auth.signUp({ email, password });
+
+export const signIn = (email, password) =>
+  supabase.auth.signInWithPassword({ email, password });
+
+export const signOut = () => supabase.auth.signOut();
+
+export const getSession = () => supabase.auth.getSession();
+
+export const onAuthStateChange = (callback) =>
+  supabase.auth.onAuthStateChange(callback);
 
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
@@ -37,9 +57,10 @@ export function registerConnection({ accessToken, refreshToken }) {
 
 // Aggregate listening stats for a user since a given ISO date.
 // Optional `artist` filter narrows to plays where that artist appears.
-export function fetchStats({ userId, since, artist, groupBy, tzOffset }) {
+export function fetchStats({ userId, since, until, artist, groupBy, tzOffset }) {
   const params = new URLSearchParams({ user_id: userId });
   if (since) params.set("since", since);
+  if (until) params.set("until", until);
   if (artist) params.set("artist", artist);
   if (groupBy) params.set("group_by", groupBy);
   if (tzOffset != null) params.set("tz_offset", String(tzOffset));

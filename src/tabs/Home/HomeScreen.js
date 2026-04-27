@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, Alert } from "react-native";
+import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, Alert, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { tokens, fonts } from "../../lib/tokens";
@@ -30,7 +30,17 @@ const PLACEHOLDER_FRIENDS = [
 function startOfWeek() {
   const now = new Date();
   const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday-start week
+  const diff = day === 0 ? -6 : 1 - day;
+  const start = new Date(now);
+  start.setDate(now.getDate() + diff);
+  start.setHours(0, 0, 0, 0);
+  return start.toISOString();
+}
+
+function startOfLastWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? -13 : -6 - day;
   const start = new Date(now);
   start.setDate(now.getDate() + diff);
   start.setHours(0, 0, 0, 0);
@@ -39,9 +49,10 @@ function startOfWeek() {
 
 function weekIndex() {
   const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = Math.floor((now - start) / 86400000);
-  return Math.ceil((diff + start.getDay() + 1) / 7);
+  const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 }
 
 function formatHoursMinutes(totalMinutes) {
@@ -108,13 +119,18 @@ export default function HomeScreen({
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const showToast = useToast();
+  const scrollRef = useRef(null);
   const [stats, setStats] = useState(null);
+  const [lastWeekStats, setLastWeekStats] = useState(null);
   const [weekTop, setWeekTop] = useState(null);
   const [chartRange, setChartRange] = useState("7d");
   const [chartPoints, setChartPoints] = useState(null);
+  const [chartRefreshing, setChartRefreshing] = useState(false);
+  const chartCache = useRef({});
   const [refreshKey, setRefreshKey] = useState(0);
 
   useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
     setRefreshKey(k => k + 1);
   }, []));
 
@@ -123,6 +139,9 @@ export default function HomeScreen({
     fetchStats({ userId: user.id, since: startOfWeek() })
       .then(setStats)
       .catch((error) => { console.log("stats error", error.message); showToast("Couldn't load stats"); });
+    fetchStats({ userId: user.id, since: startOfLastWeek(), until: startOfWeek() })
+      .then(setLastWeekStats)
+      .catch((error) => console.log("last week stats error", error.message));
   }, [user?.id, refreshKey]);
 
   useEffect(() => {
@@ -135,7 +154,13 @@ export default function HomeScreen({
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
-    setChartPoints(null);
+
+    if (chartCache.current[chartRange]) {
+      setChartPoints(chartCache.current[chartRange]);
+    } else {
+      setChartPoints(null);
+    }
+    setChartRefreshing(true);
 
     fetchStats({
       userId: user.id,
@@ -143,14 +168,24 @@ export default function HomeScreen({
       groupBy: "calendar_day",
       tzOffset: new Date().getTimezoneOffset(),
     })
-      .then((result) => { if (!cancelled) setChartPoints(result?.chart_points ?? null); })
-      .catch((err) => console.log("chart error", err.message));
+      .then((result) => {
+        if (cancelled) return;
+        const points = result?.chart_points ?? null;
+        if (points) chartCache.current[chartRange] = points;
+        setChartPoints(points);
+      })
+      .catch((err) => console.log("chart error", err.message))
+      .finally(() => { if (!cancelled) setChartRefreshing(false); });
 
     return () => { cancelled = true; };
   }, [user?.id, chartRange]);
 
   const minutes = stats?.total_minutes ?? 0;
   const plays = stats?.total_plays ?? 0;
+  const lastWeekMinutes = lastWeekStats?.total_minutes ?? 0;
+  const weekChange = lastWeekMinutes > 0
+    ? Math.round(((minutes - lastWeekMinutes) / lastWeekMinutes) * 100)
+    : null;
   const firstName = user?.displayName?.split(" ")?.[0] ?? "there";
 
   const chartMax = chartPoints ? Math.max(...chartPoints, 1) : 1;
@@ -161,6 +196,7 @@ export default function HomeScreen({
   return (
     <View style={styles.root}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingTop: insets.top + 14, paddingBottom: 130 },
@@ -204,11 +240,13 @@ export default function HomeScreen({
           <Hand size={22} color={tokens.accent} style={{ marginTop: 6 }}>
             ~ that's {formatHoursMinutes(minutes)}
           </Hand>
-          <View style={styles.heroFooter}>
-            <Mono size={10} style={{ color: "rgba(255,255,255,0.6)" }}>
-              ↑ 12% vs last week
-            </Mono>
-          </View>
+          {weekChange !== null && (
+            <View style={styles.heroFooter}>
+              <Mono size={10} style={{ color: "rgba(255,255,255,0.6)" }}>
+                {weekChange >= 0 ? "↑" : "↓"} {Math.abs(weekChange)}% vs last week
+              </Mono>
+            </View>
+          )}
         </View>
 
         {/* Top-3 shortcut grid */}
@@ -254,7 +292,10 @@ export default function HomeScreen({
         {/* 30-day listening chart */}
         <Box style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Mono>Listening · {CHART_RANGES.find((r) => r.key === chartRange)?.title}</Mono>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Mono>Listening · {CHART_RANGES.find((r) => r.key === chartRange)?.title}</Mono>
+              {chartRefreshing && <ActivityIndicator size="small" color={tokens.ink3} />}
+            </View>
             <View style={styles.chips}>
               {CHART_RANGES.map((r) => (
                 <Chip

@@ -108,6 +108,7 @@ export default function RecentScreen({ user }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const hasLoaded = useRef(false);
+  const scrollRef = useRef(null);
 
   const load = useCallback((silent = false) => {
     if (!user?.id) return;
@@ -126,6 +127,7 @@ export default function RecentScreen({ user }) {
 
   useFocusEffect(
     useCallback(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
       load(!hasLoaded.current ? false : true);
       hasLoaded.current = true;
       const interval = setInterval(() => load(true), 2 * 60 * 1000);
@@ -140,6 +142,7 @@ export default function RecentScreen({ user }) {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 14 }]}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}
       >

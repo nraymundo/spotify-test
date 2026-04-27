@@ -4,7 +4,7 @@
     "displayName": "Reverb",
     "slug": "test_react_native",
     "scheme": "com.nraymundo.spotifystats",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nraymundo.spotifystats",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -36,6 +36,6 @@
         "projectId": "0cad8ea1-00b1-4659-ae89-d50ebf1a9e35"
       }
     },
-    "plugins": ["expo-font", "expo-secure-store"]
+    "plugins": ["expo-font", "expo-secure-store", "expo-apple-authentication"]
   }
 }

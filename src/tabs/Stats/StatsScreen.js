@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, ScrollView, StyleSheet, Text, ActivityIndicator, Pressable } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tokens, fonts } from "../../lib/tokens";
@@ -95,6 +95,11 @@ export default function StatsScreen({ user, token }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const cache = React.useRef({});
+  const scrollRef = useRef(null);
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
 
   const currentRange = RANGES.find((r) => r.key === range);
 
@@ -224,6 +229,7 @@ export default function StatsScreen({ user, token }) {
   return (
     <View style={styles.root}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingTop: insets.top + 14, paddingBottom: 130 },

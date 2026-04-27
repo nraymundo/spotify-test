@@ -1,152 +1,117 @@
-import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Pressable, StyleSheet, Platform, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ResponseType, useAuthRequest, makeRedirectUri, exchangeCodeAsync } from "expo-auth-session";
-import axios from "axios";
-import Marquee from "../../components/Marquee";
-import SpotifyLogo from "../../components/SpotifyLogo";
-import { registerConnection } from "../../lib/supabase";
-import { CLIENT_ID, saveRefreshToken } from "../../lib/spotify";
+import { useNavigation } from "@react-navigation/native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { tokens, fonts } from "../../lib/tokens";
+import { supabase } from "../../lib/supabase";
 
-const discovery = {
-  authorizationEndpoint: "https://accounts.spotify.com/authorize",
-  tokenEndpoint: "https://accounts.spotify.com/api/token",
-};
-
-const clientId = CLIENT_ID;
-const redirectUri = makeRedirectUri({ scheme: "com.nraymundo.spotifystats", path: "callback" });
-
-const TOP_ALBUMS_FEED = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/25/albums.json";
-
-export default function LoginScreen({ setIsLoggedIn, setToken }) {
+export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const [albums, setAlbums] = useState([]);
+  const navigation = useNavigation();
 
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      responseType: ResponseType.Code,
-      clientId,
-      scopes: [
-        "user-read-currently-playing",
-        "user-read-recently-played",
-        "user-read-playback-state",
-        "user-top-read",
-        "user-modify-playback-state",
-        "streaming",
-        "user-read-email",
-        "user-read-private",
-      ],
-      usePKCE: true,
-      redirectUri,
-    },
-    discovery
-  );
-
-  useEffect(() => {
-    axios(TOP_ALBUMS_FEED)
-      .then((res) => {
-        const items = res.data.feed.results.map((a) => ({
-          name: a.name,
-          image: a.artworkUrl100.replace("100x100", "300x300"),
-        }));
-        setAlbums(items);
-      })
-      .catch((error) => console.log("marquee fetch error", error.message));
-  }, []);
-
-  useEffect(() => {
-    if (response?.type === "success" && request?.codeVerifier) {
-      exchangeCodeAsync(
-        {
-          clientId,
-          code: response.params.code,
-          redirectUri,
-          extraParams: { code_verifier: request.codeVerifier },
-        },
-        discovery
-      )
-        .then(async (tokenResponse) => {
-          registerConnection({
-            accessToken: tokenResponse.accessToken,
-            refreshToken: tokenResponse.refreshToken,
-          }).catch((error) => {
-            console.log("connect error", error.message);
-          });
-          await saveRefreshToken(tokenResponse.refreshToken);
-          setToken(tokenResponse.accessToken);
-          setIsLoggedIn(true);
-        })
-        .catch((error) => {
-          console.log("token exchange error", error.message);
-        });
+  async function handleAppleSignIn() {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+      if (error) Alert.alert("Sign in failed", error.message);
+    } catch (e) {
+      if (e.code !== "ERR_REQUEST_CANCELED") {
+        Alert.alert("Sign in failed", e.message);
+      }
     }
-  }, [response]);
-
-  const half = Math.ceil(albums.length / 2);
-  const row1 = albums.slice(0, half);
-  const row2 = albums.slice(half);
+  }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <View style={styles.wordmarkContainer}>
         <Text style={styles.wordmark}>reverb</Text>
       </View>
-      <View style={styles.marqueeStack}>
-        <Marquee items={row1} direction="left" speed={35} />
-        <View style={styles.rowGap} />
-        <Marquee items={row2} direction="right" speed={35} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Pressable style={styles.button} onPress={() => promptAsync()}>
-          <SpotifyLogo size={24} color="#fff" />
-          <Text style={styles.buttonLabel}>Log in with Spotify</Text>
+
+      <View style={[styles.buttons, { paddingBottom: insets.bottom + 16 }]}>
+        <Pressable
+          style={styles.loginButton}
+          onPress={() => navigation.navigate("EmailAuth", { mode: "login" })}
+        >
+          <Text style={styles.loginLabel}>Log in</Text>
         </Pressable>
+
+        <Pressable
+          style={styles.signupButton}
+          onPress={() => navigation.navigate("EmailAuth", { mode: "signup" })}
+        >
+          <Text style={styles.signupLabel}>Sign up</Text>
+        </Pressable>
+
+        {Platform.OS === "ios" && (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={999}
+            style={styles.appleButton}
+            onPress={handleAppleSignIn}
+          />
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: "#121212",
+    backgroundColor: tokens.bg,
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingBottom: 8,
+  wordmarkContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   wordmark: {
     fontFamily: "ClimateCrisis_400Regular",
-    color: "#FFD166",
-    fontSize: 36,
-    letterSpacing: 1,
+    fontSize: 72,
+    color: tokens.ink,
+    letterSpacing: -1,
   },
-  marqueeStack: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  rowGap: {
-    height: 12,
-  },
-  buttonContainer: {
+  buttons: {
     paddingHorizontal: 24,
-    paddingBottom: 80,
+    gap: 12,
   },
-  button: {
-    width: "100%",
+  loginButton: {
     height: 56,
-    borderRadius: 28,
-    flexDirection: "row",
+    borderRadius: 999,
+    backgroundColor: tokens.accent,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1ED760",
-    gap: 10,
   },
-  buttonLabel: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+  loginLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 17,
+    color: tokens.ink,
+  },
+  signupButton: {
+    height: 56,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: tokens.ink,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signupLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 17,
+    color: tokens.ink,
+  },
+  appleButton: {
+    height: 56,
+    width: "100%",
   },
 });

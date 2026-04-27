@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const userId = url.searchParams.get("user_id");
   const since = url.searchParams.get("since");
+  const until = url.searchParams.get("until");
   const artist = url.searchParams.get("artist");
   const groupBy = url.searchParams.get("group_by"); // "hour" | "day" | null
   const tzOffset = parseInt(url.searchParams.get("tz_offset") ?? "0"); // minutes, from getTimezoneOffset()
@@ -39,6 +40,7 @@ Deno.serve(async (req) => {
     .eq("spotify_user_id", userId);
 
   if (since) query = query.gte("played_at", since);
+  if (until) query = query.lt("played_at", until);
   if (artist) query = query.contains("artist_names", [artist]);
 
   const { data, error, count } = await query;
