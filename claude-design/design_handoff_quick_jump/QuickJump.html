@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quick Jump — Your top this week</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #F0EEE9;
+    --paper: #FAF7F1;
+    --ink: #121212;
+    --ink2: #3D3D3D;
+    --ink3: #7A756B;
+    --line: #C7C2B6;
+    --accent: #FFD166;   /* yellow — fills/highlights */
+    --accent2: #588B8B;  /* teal — text on light surfaces */
+    --hand: 'Caveat', cursive;
+    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+    --body: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: var(--body);
+    color: var(--ink);
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .stage { max-width: 420px; width: 100%; }
+  .frame-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 14px;
+  }
+
+  /* ─── Section Head ─── */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-head .left .kicker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink3);
+  }
+  .section-head .left .title {
+    font-family: var(--hand);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .section-head .action {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* ─── Card grid ─── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .card {
+    background: var(--paper);
+    border: 1.5px dashed var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card .label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 6px;
+  }
+  .art {
+    width: 100%;
+    height: 84px;
+    border-radius: 6px;
+    background: repeating-linear-gradient(
+      135deg,
+      #E5E2D9 0,
+      #E5E2D9 6px,
+      #D8D4C8 6px,
+      #D8D4C8 12px
+    );
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: #7A756B;
+  }
+  .name {
+    margin-top: 8px;
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+    flex: 1;
+    min-height: 26px;
+  }
+  .meta {
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ink3);
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame-label">Quick Jump · Home D</div>
+
+    <!-- Section header -->
+    <div class="section-head">
+      <div class="left">
+        <div class="kicker">quick jump</div>
+        <div class="title">Your top this week</div>
+      </div>
+      <a class="action">see all →</a>
+    </div>
+
+    <!-- Three card grid -->
+    <div class="grid">
+      <div class="card">
+        <div class="label">artist</div>
+        <div class="art">ARTIST</div>
+        <div class="name">The Weather Station</div>
+        <div class="meta">14h</div>
+      </div>
+      <div class="card">
+        <div class="label">album</div>
+        <div class="art">ALBUM</div>
+        <div class="name">Ignorance</div>
+        <div class="meta">38 plays</div>
+      </div>
+      <div class="card">
+        <div class="label">song</div>
+        <div class="art">SONG</div>
+        <div class="name">Atlantic</div>
+        <div class="meta">21 plays</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

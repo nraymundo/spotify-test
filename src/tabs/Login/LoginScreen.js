@@ -1,27 +1,32 @@
 import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { View, StyleSheet, KeyboardAvoidingView, Text, Pressable, Image, TouchableOpacity, Linking } from "react-native";
-import { useEffect, useState } from "react";
-import { ResponseType, useAuthRequest, makeRedirectUri } from "expo-auth-session";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Text, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ResponseType, useAuthRequest, makeRedirectUri, exchangeCodeAsync } from "expo-auth-session";
 import axios from "axios";
+import Marquee from "../../components/Marquee";
+import SpotifyLogo from "../../components/SpotifyLogo";
+import { registerConnection } from "../../lib/supabase";
+import { CLIENT_ID, saveRefreshToken } from "../../lib/spotify";
 
 const discovery = {
-  authorizationEndpoint: 
-  "https://accounts.spotify.com/authorize",
-  tokenEndpoint: 
-  "https://accounts.spotify.com/api/token",
+  authorizationEndpoint: "https://accounts.spotify.com/authorize",
+  tokenEndpoint: "https://accounts.spotify.com/api/token",
 };
 
-export default function LoginScreen({
-  setIsLoggedIn, setTopArtists4Weeks, setTopArtists6Months, setTopArtistsAllTime, 
-  setTopTrack4Weeks, setTopTracks6Months, setTopTracksAllTime, setRecentlyPlayed,
-}) {
-  const [token, setToken] = useState('');
-  const [userInfo, setUserInfo] = useState(null);
+const clientId = CLIENT_ID;
+const redirectUri = makeRedirectUri({ scheme: "com.nraymundo.spotifystats", path: "callback" });
+
+const TOP_ALBUMS_FEED = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/25/albums.json";
+
+export default function LoginScreen({ setIsLoggedIn, setToken }) {
+  const insets = useSafeAreaInsets();
+  const [albums, setAlbums] = useState([]);
+
   const [request, response, promptAsync] = useAuthRequest(
     {
-      responseType: ResponseType.Token,
-      clientId: "622441cd35fa43e383c923ce4d76f026",
+      responseType: ResponseType.Code,
+      clientId,
       scopes: [
         "user-read-currently-playing",
         "user-read-recently-played",
@@ -32,271 +37,116 @@ export default function LoginScreen({
         "user-read-email",
         "user-read-private",
       ],
-      usePKCE: false,
-      redirectUri: makeRedirectUri({ scheme: "com.nraymundo.spotifystats", path: "callback" }),
+      usePKCE: true,
+      redirectUri,
     },
     discovery
   );
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const { access_token } = response.params;
-      setToken(access_token);
-      setIsLoggedIn(true);
+    axios(TOP_ALBUMS_FEED)
+      .then((res) => {
+        const items = res.data.feed.results.map((a) => ({
+          name: a.name,
+          image: a.artworkUrl100.replace("100x100", "300x300"),
+        }));
+        setAlbums(items);
+      })
+      .catch((error) => console.log("marquee fetch error", error.message));
+  }, []);
+
+  useEffect(() => {
+    if (response?.type === "success" && request?.codeVerifier) {
+      exchangeCodeAsync(
+        {
+          clientId,
+          code: response.params.code,
+          redirectUri,
+          extraParams: { code_verifier: request.codeVerifier },
+        },
+        discovery
+      )
+        .then(async (tokenResponse) => {
+          registerConnection({
+            accessToken: tokenResponse.accessToken,
+            refreshToken: tokenResponse.refreshToken,
+          }).catch((error) => {
+            console.log("connect error", error.message);
+          });
+          await saveRefreshToken(tokenResponse.refreshToken);
+          setToken(tokenResponse.accessToken);
+          setIsLoggedIn(true);
+        })
+        .catch((error) => {
+          console.log("token exchange error", error.message);
+        });
     }
   }, [response]);
 
-  useEffect(() => {
-    if (token) {
-      axios(
-        "https://api.spotify.com/v1/me", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setUserInfo({
-            display_name: response.data.display_name,
-            profile_url: response.data.external_urls.spotify,
-            profile_image: response.data.images[1].url,
-          })
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopTrack4Weeks(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.album.images[1].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopTracks6Months(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.album.images[1].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopTracksAllTime(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.album.images[1].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopArtists4Weeks(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.images[2].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopArtists6Months(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.images[2].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=20", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setTopArtistsAllTime(response.data.items.map(item => {
-            return {
-              name: item.name,
-              image: item.images[2].url,
-              url: item.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-      axios(
-        "https://api.spotify.com/v1/me/player/recently-played?limit=10", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-        .then((response) => {
-          setRecentlyPlayed(response.data.items.map(item => {
-            const artists = [];
-            item.track.artists.map(artist => {
-              artists.push(artist.name);
-            });
-            return {
-              name: item.track.name,
-              image: item.track.album.images[1].url,
-              artist: artists,
-              url: item.track.external_urls.spotify,
-            }
-          }));
-        })
-        .catch((error) => {
-          console.log("error", error.message);
-        });
-    }
-  }, [token]);
-
-  const imageSource = userInfo ? userInfo.profile_image : 'https://i.scdn.co/image/ab6761610000e5eb58efbed422ab46484466822b';
-  const displayName = userInfo ? userInfo.display_name : '';
+  const half = Math.ceil(albums.length / 2);
+  const row1 = albums.slice(0, half);
+  const row2 = albums.slice(half);
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="light" />
-      <View styles={styles.userInfoContainer}>
-        <TouchableOpacity onPress={userInfo ? () => Linking.openURL(userInfo.profile_url) : null} activeOpacity={0.8} style={styles.imageContainer}>
-          <Image source={{ uri: imageSource}} style={styles.image} />
-        </TouchableOpacity>
-        <View style={styles.detailsContainer}>
-          <Text style={styles.displayName}>{displayName}</Text>
-        </View>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <Text style={styles.wordmark}>reverb</Text>
       </View>
-      <View
-        style={styles.buttonContainer}
-      >
-        <Pressable
-          style={[styles.button, { backgroundColor: "#1db954" }]}
-          onPress={() => { promptAsync() }}
-        >
-          <Text style={[styles.buttonLabel, { color: "#fff" }]}>Sign in with Spotify</Text>
+      <View style={styles.marqueeStack}>
+        <Marquee items={row1} direction="left" speed={35} />
+        <View style={styles.rowGap} />
+        <Marquee items={row2} direction="right" speed={35} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <Pressable style={styles.button} onPress={() => promptAsync()}>
+          <SpotifyLogo size={24} color="#fff" />
+          <Text style={styles.buttonLabel}>Log in with Spotify</Text>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#121212",
-    gap: 20,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
+  wordmark: {
+    fontFamily: "ClimateCrisis_400Regular",
+    color: "#FFD166",
+    fontSize: 36,
+    letterSpacing: 1,
+  },
+  marqueeStack: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  rowGap: {
+    height: 12,
   },
   buttonContainer: {
-    width: 200,
-    height: 68,
-    marginHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 3,
+    paddingHorizontal: 24,
+    paddingBottom: 80,
   },
   button: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: 56,
+    borderRadius: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1ED760",
+    gap: 10,
   },
   buttonLabel: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: "600",
   },
-  userInfoContainer: {
-    gap: 40,
-  },
-  imageContainer: {
-    height: 160,
-    width: 160,
-  },
-  image: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-  },
-  detailsContainer: {
-    paddingTop: 20,
-  },
-  displayName: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  }
 });

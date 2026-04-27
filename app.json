@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "test_react_native",
+    "name": "Reverb",
+    "displayName": "Reverb",
     "slug": "test_react_native",
     "scheme": "com.nraymundo.spotifystats",
     "version": "1.0.0",
@@ -10,11 +11,9 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#121212"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nraymundo.spotifystats",
@@ -36,6 +35,7 @@
       "eas": {
         "projectId": "0cad8ea1-00b1-4659-ae89-d50ebf1a9e35"
       }
-    }
+    },
+    "plugins": ["expo-font", "expo-secure-store"]
   }
 }

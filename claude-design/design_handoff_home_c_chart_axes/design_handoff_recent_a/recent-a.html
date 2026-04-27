@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recent (A) — Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:24px; background:#F0EEE9; font-family:"Inter",system-ui,sans-serif; color:#121212; }
+  .phone { width: 360px; padding: 14px 16px; border:1.5px solid #121212; border-radius:24px; background:#F7F5F0; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .title { font-weight:800; font-size:26px; letter-spacing:-0.6px; }
+  .mono { font-family:"JetBrains Mono",monospace; }
+  .dim { color:#7A756B; }
+  .kicker { font-family:"JetBrains Mono",monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:#3D3D3D; }
+  .group { margin-bottom: 18px; }
+  .group-head { display:flex; justify-content:space-between; margin-bottom: 8px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .tile-art { width:100%; height:96px; border:1.2px solid #121212; border-radius:6px;
+    background: repeating-linear-gradient(45deg, #ECE7DC 0 6px, #E1DCCF 6px 12px); }
+  .tile-title { margin-top:6px; font-size:11px; font-weight:600; line-height:1.2; }
+  .tile-meta { display:flex; justify-content:space-between; font-family:"JetBrains Mono",monospace; font-size:9px; color:#7A756B; }
+  .seeall-row {
+    margin-top:10px; padding-top:8px; border-top:1px dashed #C9C2B4;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .seeall-link { font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:600;
+    color:#588B8B; text-transform:uppercase; letter-spacing:0.5px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <div class="title">Recent</div>
+    <div class="mono dim">filter ▾</div>
+  </div>
+
+  <!-- TODAY -->
+  <div class="group">
+    <div class="group-head">
+      <div class="kicker">today</div>
+      <div class="kicker dim">12 plays · 47m</div>
+    </div>
+    <div class="grid">
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>9:42a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>10:18a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>10:46a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>11:24a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>12:08p</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>12:51p</span></div></div>
+    </div>
+    <div class="seeall-row">
+      <span class="mono dim" style="font-size:9px;">showing 6 of 12</span>
+      <span class="seeall-link">see all 12 →</span>
+    </div>
+  </div>
+
+  <!-- YESTERDAY -->
+  <div class="group">
+    <div class="group-head">
+      <div class="kicker">yesterday</div>
+      <div class="kicker dim">18 plays · 1h 12m</div>
+    </div>
+    <div class="grid">
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>8:12a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>9:04a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>9:38a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>10:22a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>11:00a</span></div></div>
+      <div><div class="tile-art"></div><div class="tile-title">Track title</div><div class="tile-meta"><span>artist</span><span>11:46a</span></div></div>
+    </div>
+    <div class="seeall-row">
+      <span class="mono dim" style="font-size:9px;">showing 6 of 18</span>
+      <span class="seeall-link">see all 18 →</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

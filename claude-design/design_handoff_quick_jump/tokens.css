@@ -1,0 +1,37 @@
+/* Quick Jump — Design tokens */
+
+:root {
+  /* Surfaces */
+  --bg: #F0EEE9;          /* page background */
+  --paper: #FAF7F1;       /* card surface */
+
+  /* Ink */
+  --ink: #121212;         /* primary text */
+  --ink2: #3D3D3D;        /* secondary text */
+  --ink3: #7A756B;        /* meta / kickers */
+
+  /* Lines */
+  --line: #C7C2B6;        /* dashed borders, hatch art outline */
+
+  /* Accents */
+  --accent: #FFD166;      /* yellow — fills/highlights, not body text on light */
+  --accent2: #588B8B;     /* teal — links/CTA text on light surfaces */
+
+  /* Type */
+  --font-hand: 'Caveat', cursive;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1B1B1A;
+    --paper: #242422;
+    --ink: #F0EEE9;
+    --ink2: #C7C2B6;
+    --ink3: #9A968B;
+    --line: #3A3A38;
+    --accent: #FFD166;
+    --accent2: #7BB0B0;
+  }
+}
