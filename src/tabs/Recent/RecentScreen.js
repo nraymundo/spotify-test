@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -145,6 +146,9 @@ export default function RecentScreen({ user }) {
         ref={scrollRef}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={tokens.ink} />
+        }
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <Body size={26} weight={800} style={{ letterSpacing: -0.6 }}>

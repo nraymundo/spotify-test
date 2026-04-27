@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, Alert, ActivityIndicator } from "react-native";
+import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { tokens, fonts } from "../../lib/tokens";
@@ -128,20 +128,35 @@ export default function HomeScreen({
   const [chartRefreshing, setChartRefreshing] = useState(false);
   const chartCache = useRef({});
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const pendingRefreshes = useRef(0);
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
     setRefreshKey(k => k + 1);
   }, []));
 
+  function handlePullRefresh() {
+    setPullRefreshing(true);
+    pendingRefreshes.current = 2;
+    setRefreshKey(k => k + 1);
+  }
+
+  function onFetchDone() {
+    pendingRefreshes.current -= 1;
+    if (pendingRefreshes.current <= 0) setPullRefreshing(false);
+  }
+
   useEffect(() => {
     if (!user?.id) return;
     fetchStats({ userId: user.id, since: startOfWeek() })
       .then(setStats)
-      .catch((error) => { console.log("stats error", error.message); showToast("Couldn't load stats"); });
+      .catch((error) => { console.log("stats error", error.message); showToast("Couldn't load stats"); })
+      .finally(onFetchDone);
     fetchStats({ userId: user.id, since: startOfLastWeek(), until: startOfWeek() })
       .then(setLastWeekStats)
-      .catch((error) => console.log("last week stats error", error.message));
+      .catch((error) => console.log("last week stats error", error.message))
+      .finally(onFetchDone);
   }, [user?.id, refreshKey]);
 
   useEffect(() => {
@@ -202,6 +217,9 @@ export default function HomeScreen({
           { paddingTop: insets.top + 14, paddingBottom: 130 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={tokens.ink} />
+        }
       >
         {/* Header: hand greeting + avatar */}
         <View style={styles.headerRow}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Text, ActivityIndicator, Pressable } from "react-native";
+import { View, ScrollView, StyleSheet, Text, ActivityIndicator, Pressable, RefreshControl } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -94,12 +94,20 @@ export default function StatsScreen({ user, token }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const cache = React.useRef({});
   const scrollRef = useRef(null);
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []));
+
+  function handlePullRefresh() {
+    delete cache.current[range];
+    setPullRefreshing(true);
+    setRefreshTrigger(t => t + 1);
+  }
 
   const currentRange = RANGES.find((r) => r.key === range);
 
@@ -188,13 +196,13 @@ export default function StatsScreen({ user, token }) {
         console.log("stats error", err.message);
         showToast("Couldn't load stats");
       } finally {
-        if (!cancelled) { setLoading(false); setFetching(false); }
+        if (!cancelled) { setLoading(false); setFetching(false); setPullRefreshing(false); }
       }
     }
 
     load();
     return () => { cancelled = true; };
-  }, [user?.id, range]);
+  }, [user?.id, range, refreshTrigger]);
 
   const totalMinutes = data?.stats?.total_minutes ?? null;
   const totalPlays = data?.stats?.total_plays ?? null;
@@ -234,6 +242,9 @@ export default function StatsScreen({ user, token }) {
           styles.scrollContent,
           { paddingTop: insets.top + 14, paddingBottom: 130 },
         ]}
+        refreshControl={
+          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={tokens.ink} />
+        }
         showsVerticalScrollIndicator={false}
       >
         {/* Title */}
