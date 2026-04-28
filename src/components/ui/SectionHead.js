@@ -1,8 +1,10 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 export default function SectionHead({ kicker, title, action, onActionPress }) {
+  const t = useTokens();
   return (
     <View
       style={{
@@ -20,7 +22,7 @@ export default function SectionHead({ kicker, title, action, onActionPress }) {
               fontSize: 10,
               letterSpacing: 1,
               textTransform: "uppercase",
-              color: tokens.ink3,
+              color: t.ink3,
               marginBottom: 2,
             }}
           >
@@ -32,7 +34,7 @@ export default function SectionHead({ kicker, title, action, onActionPress }) {
             fontFamily: fonts.handBold,
             fontSize: 28,
             lineHeight: 28,
-            color: tokens.ink,
+            color: t.ink,
           }}
         >
           {title}
@@ -44,7 +46,7 @@ export default function SectionHead({ kicker, title, action, onActionPress }) {
             style={{
               fontFamily: fonts.mono,
               fontSize: 11,
-              color: tokens.accent2,
+              color: t.accent2,
               textTransform: "uppercase",
               letterSpacing: 0.2,
             }}

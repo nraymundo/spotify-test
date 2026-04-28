@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ResponseType, useAuthRequest, makeRedirectUri, exchangeCodeAsync } from "expo-auth-session";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { registerConnection } from "../../lib/supabase";
 import { CLIENT_ID, saveRefreshToken } from "../../lib/spotify";
 import SpotifyLogo from "../../components/SpotifyLogo";
@@ -21,6 +22,8 @@ const STATIC_POINTS = [12, 18, 24, 31, 45, 52, 60, 72, 85, 90];
 
 export default function ConnectSpotifyScreen({ setToken, setIsSpotifyConnected }) {
   const insets = useSafeAreaInsets();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
 
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -70,7 +73,7 @@ export default function ConnectSpotifyScreen({ setToken, setIsSpotifyConnected }
     <View style={[styles.root, { paddingTop: insets.top + 14 }]}>
       <View style={styles.content}>
         <Box style={styles.card}>
-          <Mono size={9} style={{ marginBottom: 8 }}>EXAMPLE</Mono>
+          <Mono size={9} style={{ marginBottom: 8 }}>LISTENING</Mono>
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, marginBottom: 10 }}>
             <Body size={38} weight={800} style={{ letterSpacing: -1 }}>487</Body>
             <Mono size={14} style={{ paddingBottom: 6 }}>min</Mono>
@@ -96,14 +99,15 @@ export default function ConnectSpotifyScreen({ setToken, setIsSpotifyConnected }
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    justifyContent: "center",
   },
   card: {
     padding: 16,
@@ -114,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   body: {
-    color: tokens.ink2,
+    color: t.ink2,
     lineHeight: 21,
   },
   buttonContainer: {

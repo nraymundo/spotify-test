@@ -1,16 +1,17 @@
 import React from "react";
 import { View } from "react-native";
-import { tokens } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 export default function Box({ children, style, accent }) {
+  const t = useTokens();
   return (
     <View
       style={[
         {
           borderWidth: 1.5,
-          borderColor: accent ? tokens.accent : tokens.line,
+          borderColor: accent ? t.accent : t.line,
           borderRadius: 10,
-          backgroundColor: tokens.surface,
+          backgroundColor: t.surface,
         },
         style,
       ]}

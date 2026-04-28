@@ -36,14 +36,23 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from("plays")
-    .select("track_id, duration_ms, played_at", { count: "exact" })
+    .select("track_id, artist_names, duration_ms, played_at", { count: "exact" })
     .eq("spotify_user_id", userId);
 
   if (since) query = query.gte("played_at", since);
   if (until) query = query.lt("played_at", until);
   if (artist) query = query.contains("artist_names", [artist]);
 
-  const { data, error, count } = await query;
+  // Streak is global (independent of since/until/artist filters), so fetch all
+  // play dates for this user in parallel.
+  const [mainResult, allDatesResult] = await Promise.all([
+    query,
+    supabase
+      .from("plays")
+      .select("played_at")
+      .eq("spotify_user_id", userId),
+  ]);
+  const { data, error, count } = mainResult;
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
@@ -54,6 +63,9 @@ Deno.serve(async (req) => {
   const plays = data ?? [];
   const totalMs = plays.reduce((sum: number, p: any) => sum + p.duration_ms, 0);
   const uniqueTracks = new Set(plays.map((p: any) => p.track_id)).size;
+  const uniqueArtists = new Set(
+    plays.flatMap((p: any) => p.artist_names ?? [])
+  ).size;
 
   const elapsedDays = since
     ? Math.max(1, Math.ceil((Date.now() - new Date(since).getTime()) / 86400000))
@@ -66,6 +78,27 @@ Deno.serve(async (req) => {
   // getTimezoneOffset() returns (UTC - local) in minutes, so local = UTC - offset.
   function toLocal(isoString: string): Date {
     return new Date(new Date(isoString).getTime() - tzOffset * 60000);
+  }
+
+  // Streak: consecutive days with plays counting backward from today
+  // (or yesterday if today has no plays yet).
+  let streak = 0;
+  if (!allDatesResult.error && allDatesResult.data) {
+    const localDates = new Set(
+      allDatesResult.data.map((p: any) =>
+        toLocal(p.played_at).toISOString().slice(0, 10)
+      )
+    );
+    const localMs = Date.now() - tzOffset * 60000;
+    const todayLocal = new Date(localMs).toISOString().slice(0, 10);
+    const cur = new Date(todayLocal + "T12:00:00Z");
+    if (!localDates.has(todayLocal)) {
+      cur.setUTCDate(cur.getUTCDate() - 1);
+    }
+    while (localDates.has(cur.toISOString().slice(0, 10))) {
+      streak++;
+      cur.setUTCDate(cur.getUTCDate() - 1);
+    }
   }
 
   const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -122,8 +155,10 @@ Deno.serve(async (req) => {
       total_plays: count ?? 0,
       total_minutes: Math.round(totalMs / 60000),
       unique_tracks: uniqueTracks,
+      unique_artists: uniqueArtists,
       avg_min_per_day: avgMinPerDay,
       peak_day: peakDay,
+      streak,
       chart_points: chartPoints,
       since: since ?? null,
     }),

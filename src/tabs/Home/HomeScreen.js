@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, Alert, ActivityIndicator, RefreshControl } from "react-native";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { View, ScrollView, StyleSheet, Pressable, Animated, Text, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { fetchStats, fetchTop } from "../../lib/supabase";
 import { useToast } from "../../lib/toast";
 import Mono from "../../components/ui/Mono";
@@ -114,11 +115,12 @@ export default function HomeScreen({
   topTracks4Weeks,
   topTracks6Months,
   topTracksAllTime,
-  onLogout,
 }) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const showToast = useToast();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const scrollRef = useRef(null);
   const [stats, setStats] = useState(null);
   const [lastWeekStats, setLastWeekStats] = useState(null);
@@ -197,6 +199,23 @@ export default function HomeScreen({
 
   const minutes = stats?.total_minutes ?? 0;
   const plays = stats?.total_plays ?? 0;
+
+  // Animate the big minutes counter up from its previously displayed value.
+  const animatedMinutes = useRef(new Animated.Value(0)).current;
+  const [displayMinutes, setDisplayMinutes] = useState(0);
+  useEffect(() => {
+    const id = animatedMinutes.addListener(({ value }) => {
+      setDisplayMinutes(Math.round(value));
+    });
+    return () => animatedMinutes.removeListener(id);
+  }, [animatedMinutes]);
+  useEffect(() => {
+    Animated.timing(animatedMinutes, {
+      toValue: minutes,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [minutes, animatedMinutes]);
   const lastWeekMinutes = lastWeekStats?.total_minutes ?? 0;
   const weekChange = lastWeekMinutes > 0
     ? Math.round(((minutes - lastWeekMinutes) / lastWeekMinutes) * 100)
@@ -218,20 +237,13 @@ export default function HomeScreen({
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={tokens.ink} />
+          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={t.ink} />
         }
       >
         {/* Header: hand greeting + avatar */}
         <View style={styles.headerRow}>
           <Hand size={34}>Hi, {firstName}.</Hand>
-          <Pressable
-            onLongPress={() =>
-              Alert.alert("Sign out", "Are you sure?", [
-                { text: "Cancel", style: "cancel" },
-                { text: "Sign out", style: "destructive", onPress: onLogout },
-              ])
-            }
-          >
+          <Pressable onPress={() => navigation.navigate("Settings")}>
             <Art size={32} round uri={user?.image} />
           </Pressable>
         </View>
@@ -243,19 +255,19 @@ export default function HomeScreen({
         <View style={styles.hero}>
           <Mono
             size={10}
-            style={{ color: tokens.accent, letterSpacing: 1.5, marginBottom: 8 }}
+            style={{ color: t.accent, letterSpacing: 1.5, marginBottom: 8 }}
           >
             THIS WEEK · IN MINUTES
           </Mono>
           <Body
             size={92}
             weight={800}
-            color={tokens.bg}
+            color={t.bg}
             style={{ letterSpacing: -3.5, marginTop: -8, marginBottom: -8 }}
           >
-            {minutes}
+            {displayMinutes}
           </Body>
-          <Hand size={22} color={tokens.accent} style={{ marginTop: 6 }}>
+          <Hand size={22} color={t.accent} style={{ marginTop: 6 }}>
             ~ that's {formatHoursMinutes(minutes)}
           </Hand>
           {weekChange !== null && (
@@ -273,7 +285,7 @@ export default function HomeScreen({
           title="Your top this week"
           action="see all →"
           onActionPress={() =>
-            navigation.navigate("Top Artists", { userId: user.id })
+            navigation.navigate("Top Artists", { userId: user.id, range: "week" })
           }
         />
         <View style={styles.topGrid}>
@@ -283,7 +295,7 @@ export default function HomeScreen({
             stat={formatDuration(weekTop?.topArtist?.minutes)}
             uri={weekTop?.topArtist?.artistImageUrl}
             onPress={() =>
-              navigation.navigate("Top Artists", { userId: user.id })
+              navigation.navigate("Top Artists", { userId: user.id, range: "week" })
             }
           />
           <TopCard
@@ -312,7 +324,7 @@ export default function HomeScreen({
           <View style={styles.chartHeader}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Mono>Listening · {CHART_RANGES.find((r) => r.key === chartRange)?.title}</Mono>
-              {chartRefreshing && <ActivityIndicator size="small" color={tokens.ink3} />}
+              {chartRefreshing && <ActivityIndicator size="small" color={t.ink3} />}
             </View>
             <View style={styles.chips}>
               {CHART_RANGES.map((r) => (
@@ -358,7 +370,7 @@ export default function HomeScreen({
               <View style={styles.friendText}>
                 <Body size={12} weight={600}>
                   @{f.handle} ·{" "}
-                  <Body size={12} weight={500} color={tokens.ink2}>
+                  <Body size={12} weight={500} color={t.ink2}>
                     {f.track}
                   </Body>
                 </Body>
@@ -378,6 +390,8 @@ export default function HomeScreen({
 }
 
 function TopCard({ label, name, stat, uri, onPress }) {
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const scale = useRef(new Animated.Value(1)).current;
 
   const onPressIn = () =>
@@ -393,7 +407,7 @@ function TopCard({ label, name, stat, uri, onPress }) {
           {uri ? (
             <Image source={{ uri }} style={{ width: "100%", height: "100%" }} />
           ) : (
-            <View style={{ flex: 1, backgroundColor: tokens.shade2 }} />
+            <View style={{ flex: 1, backgroundColor: t.shade2 }} />
           )}
         </View>
         <Text style={styles.topCardName} numberOfLines={2}>
@@ -405,10 +419,10 @@ function TopCard({ label, name, stat, uri, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -422,7 +436,7 @@ const styles = StyleSheet.create({
   hero: {
     padding: 18,
     borderRadius: 16,
-    backgroundColor: tokens.ink,
+    backgroundColor: t.ink,
     marginBottom: 16,
     overflow: "hidden",
   },
@@ -441,7 +455,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#FAF7F1",
     borderWidth: 1.5,
-    borderColor: tokens.line,
+    borderColor: t.line,
     borderRadius: 10,
     flexDirection: "column",
   },
@@ -450,7 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    color: tokens.ink3,
+    color: t.ink3,
     marginBottom: 6,
   },
   topCardArt: {
@@ -458,15 +472,15 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: tokens.line2,
+    borderColor: t.line2,
     overflow: "hidden",
-    backgroundColor: tokens.shade2,
+    backgroundColor: t.shade2,
   },
   topCardName: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
     lineHeight: 13.2,
-    color: tokens.ink,
+    color: t.ink,
     marginTop: 8,
     flex: 1,
     minHeight: 26,
@@ -474,7 +488,7 @@ const styles = StyleSheet.create({
   topCardMeta: {
     fontFamily: fonts.mono,
     fontSize: 9,
-    color: tokens.ink3,
+    color: t.ink3,
     marginTop: 4,
     textTransform: "uppercase",
     letterSpacing: 0.2,
@@ -496,7 +510,7 @@ const styles = StyleSheet.create({
   chartSkeleton: {
     height: 126,
     borderRadius: 6,
-    backgroundColor: tokens.shade2,
+    backgroundColor: t.shade2,
   },
   chartRow: {
     flexDirection: "row",
@@ -534,6 +548,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 99,
-    backgroundColor: tokens.accent,
+    backgroundColor: t.accent,
   },
 });

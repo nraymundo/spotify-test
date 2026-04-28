@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Pressable, StyleSheet, Text } from "react-native";
 import { BlurView } from "expo-blur";
-import { tokens, tokensDark, fonts } from "../lib/tokens";
+import { fonts } from "../lib/tokens";
+import { useTokens, useThemeMode } from "../lib/theme";
 import { HomeIcon, StatsIcon, RecentIcon } from "./ui/TabIcons";
 
 const ICONS = {
@@ -10,19 +11,21 @@ const ICONS = {
   Recent: RecentIcon,
 };
 
-const isDark = tokens === tokensDark;
-const blurTint = isDark ? "dark" : "light";
-const pillBg = isDark ? "rgba(18,18,18,0.55)" : "rgba(240,238,233,0.78)";
-const borderColor = isDark ? "rgba(255,255,255,0.14)" : "rgba(18,18,18,0.14)";
-
 export default function FloatingTabBar({ state, navigation }) {
+  const t = useTokens();
+  const { scheme } = useThemeMode();
+  const isDark = scheme === "dark";
+  const blurTint = isDark ? "dark" : "light";
+  const pillBg = isDark ? "rgba(18,18,18,0.55)" : "rgba(240,238,233,0.78)";
+  const borderColor = isDark ? "rgba(255,255,255,0.14)" : "rgba(18,18,18,0.14)";
+
   return (
     <View style={[styles.container, { borderColor }]}>
       <BlurView intensity={60} tint={blurTint} style={[styles.pill, { backgroundColor: pillBg }]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const Icon = ICONS[route.name];
-          const color = isFocused ? tokens.accent2 : tokens.ink2;
+          const color = isFocused ? t.accent2 : t.ink2;
 
           const onPress = () => {
             const event = navigation.emit({

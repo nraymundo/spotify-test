@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   TextInput,
@@ -11,7 +11,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { signIn, signUp, supabase } from "../../lib/supabase";
 import Body from "../../components/ui/Body";
 import Mono from "../../components/ui/Mono";
@@ -31,6 +32,8 @@ export default function EmailAuthScreen() {
   const { params } = useRoute();
   const mode = params?.mode ?? "login";
   const isLogin = mode === "login";
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -128,14 +131,14 @@ export default function EmailAuthScreen() {
           <Body size={28} weight={800} style={{ letterSpacing: -0.6, marginBottom: 12 }}>
             Check your email
           </Body>
-          <Body size={15} weight={400} style={{ color: tokens.ink2, lineHeight: 22, marginBottom: 32 }}>
+          <Body size={15} weight={400} style={{ color: t.ink2, lineHeight: 22, marginBottom: 32 }}>
             We sent a confirmation link to{" "}
             <Body size={15} weight={700}>{email.trim()}</Body>
             . Tap it to activate your account.
           </Body>
 
           {resendSuccess && (
-            <Mono size={10} style={{ textTransform: "none", color: tokens.ink2, marginBottom: 12 }}>
+            <Mono size={10} style={{ textTransform: "none", color: t.ink2, marginBottom: 12 }}>
               Email resent.
             </Mono>
           )}
@@ -170,7 +173,7 @@ export default function EmailAuthScreen() {
               <Body size={28} weight={800} style={{ letterSpacing: -0.6, marginBottom: 12 }}>
                 Check your email
               </Body>
-              <Body size={15} weight={400} style={{ color: tokens.ink2, lineHeight: 22 }}>
+              <Body size={15} weight={400} style={{ color: t.ink2, lineHeight: 22 }}>
                 If an account exists for{" "}
                 <Body size={15} weight={700}>{email.trim()}</Body>
                 , you'll receive a password reset link shortly.
@@ -181,14 +184,14 @@ export default function EmailAuthScreen() {
               <Body size={28} weight={800} style={{ letterSpacing: -0.6, marginBottom: 8 }}>
                 Reset password
               </Body>
-              <Body size={15} weight={400} style={{ color: tokens.ink2, lineHeight: 22, marginBottom: 24 }}>
+              <Body size={15} weight={400} style={{ color: t.ink2, lineHeight: 22, marginBottom: 24 }}>
                 Enter your email and we'll send you a reset link.
               </Body>
 
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor={tokens.ink3}
+                placeholderTextColor={t.ink3}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -231,7 +234,7 @@ export default function EmailAuthScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={tokens.ink3}
+          placeholderTextColor={t.ink3}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -244,14 +247,14 @@ export default function EmailAuthScreen() {
           <TextInput
             style={[styles.input, styles.inputFlex]}
             placeholder="Password"
-            placeholderTextColor={tokens.ink3}
+            placeholderTextColor={t.ink3}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
             textContentType="none"
           />
           <Pressable style={styles.eyeButton} onPress={() => setShowPassword((v) => !v)}>
-            <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={tokens.ink3} />
+            <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={t.ink3} />
           </Pressable>
         </View>
 
@@ -264,9 +267,9 @@ export default function EmailAuthScreen() {
                   <Ionicons
                     name={met ? "checkmark-circle" : "ellipse-outline"}
                     size={13}
-                    color={met ? tokens.accent : tokens.ink3}
+                    color={met ? t.accent : t.ink3}
                   />
-                  <Mono size={9} style={{ textTransform: "none", color: met ? tokens.ink : tokens.ink3, marginLeft: 4 }}>
+                  <Mono size={9} style={{ textTransform: "none", color: met ? t.ink : t.ink3, marginLeft: 4 }}>
                     {rule.label}
                   </Mono>
                 </View>
@@ -280,14 +283,14 @@ export default function EmailAuthScreen() {
             <TextInput
               style={[styles.input, styles.inputFlex]}
               placeholder="Confirm password"
-              placeholderTextColor={tokens.ink3}
+              placeholderTextColor={t.ink3}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
               textContentType="none"
             />
             <Pressable style={styles.eyeButton} onPress={() => setShowConfirmPassword((v) => !v)}>
-              <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={tokens.ink3} />
+              <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={t.ink3} />
             </Pressable>
           </View>
         )}
@@ -312,10 +315,10 @@ export default function EmailAuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   back: {
     paddingHorizontal: 24,
@@ -325,7 +328,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontFamily: fonts.body,
     fontSize: 24,
-    color: tokens.ink,
+    color: t.ink,
   },
   content: {
     flex: 1,
@@ -335,13 +338,13 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1.5,
-    borderColor: tokens.line2,
+    borderColor: t.line2,
     borderRadius: 10,
     paddingHorizontal: 16,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: tokens.ink,
-    backgroundColor: tokens.surface,
+    color: t.ink,
+    backgroundColor: t.surface,
     marginBottom: 12,
   },
   inputRow: {
@@ -371,7 +374,7 @@ const styles = StyleSheet.create({
   submit: {
     height: 56,
     borderRadius: 999,
-    backgroundColor: tokens.accent,
+    backgroundColor: t.accent,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 4,
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
   submitLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 17,
-    color: tokens.ink,
+    color: t.ink,
   },
   forgotButton: {
     alignItems: "center",
@@ -388,19 +391,19 @@ const styles = StyleSheet.create({
   forgotLabel: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: tokens.ink2,
+    color: t.ink2,
   },
   outlineButton: {
     height: 52,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: tokens.ink,
+    borderColor: t.ink,
     alignItems: "center",
     justifyContent: "center",
   },
   outlineLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: tokens.ink,
+    color: t.ink,
   },
 });

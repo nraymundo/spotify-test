@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, ScrollView, StyleSheet, Text, ActivityIndicator, Pressable, RefreshControl } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { fetchStats, fetchTop, fetchGenres } from "../../lib/supabase";
 import { useToast } from "../../lib/toast";
 import Mono from "../../components/ui/Mono";
@@ -65,12 +66,6 @@ function formatAxisY(v) {
   return String(Math.round(v));
 }
 
-const axisLabelStyle = {
-  fontFamily: fonts.mono,
-  fontSize: 9,
-  color: tokens.ink3,
-};
-
 function getXLabels(rangeKey) {
   if (rangeKey === 'day') return ['12a', '6a', '12p', '6p', '11p'];
   if (rangeKey === 'week') return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -90,6 +85,12 @@ export default function StatsScreen({ user, token }) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const showToast = useToast();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
+  const axisLabelStyle = useMemo(
+    () => ({ fontFamily: fonts.mono, fontSize: 9, color: t.ink3 }),
+    [t],
+  );
   const [range, setRange] = useState("week");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -154,7 +155,7 @@ export default function StatsScreen({ user, token }) {
   function handlePullRefresh() {
     delete cache.current[range];
     setPullRefreshing(true);
-    setRefreshTrigger(t => t + 1);
+    setRefreshTrigger(tr => tr + 1);
   }
 
   const currentRange = RANGES.find((r) => r.key === range);
@@ -291,7 +292,7 @@ export default function StatsScreen({ user, token }) {
           { paddingTop: insets.top + 14, paddingBottom: 130 },
         ]}
         refreshControl={
-          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={tokens.ink} />
+          <RefreshControl refreshing={pullRefreshing} onRefresh={handlePullRefresh} tintColor={t.ink} />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -320,7 +321,7 @@ export default function StatsScreen({ user, token }) {
                 </Body>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingBottom: 5 }}>
                   <Mono size={12}>min</Mono>
-                  {fetching && <ActivityIndicator size="small" color={tokens.ink3} style={{ transform: [{ scale: 0.6 }] }} />}
+                  {fetching && <ActivityIndicator size="small" color={t.ink3} style={{ transform: [{ scale: 0.6 }] }} />}
                 </View>
               </View>
             </View>
@@ -353,15 +354,15 @@ export default function StatsScreen({ user, token }) {
           <View style={styles.metricGrid}>
             {[
               ["plays", loading ? "—" : (totalPlays?.toLocaleString() ?? "—")],
-              ["unique", loading ? "—" : (data?.stats?.unique_tracks?.toLocaleString() ?? "—")],
-              ["skips", "—"],
+              ["tracks", loading ? "—" : (data?.stats?.unique_tracks?.toLocaleString() ?? "—")],
+              ["artists", loading ? "—" : (data?.stats?.unique_artists?.toLocaleString() ?? "—")],
+              ["streak", loading ? "—" : (data?.stats?.streak != null ? `${data.stats.streak}d` : "—")],
               ["avg/day", loading || range === "day" ? "—" : formatAvgDay(data?.stats?.avg_min_per_day)],
               ["peak day", loading || range === "day" ? "—" : (data?.stats?.peak_day ?? "—")],
-              ["peak hr", "—"],
             ].map(([label, value]) => (
               <View key={label} style={styles.metricCell}>
-                <Mono size={9} style={{ color: tokens.accentInk, opacity: 0.5 }}>{label}</Mono>
-                <Body size={20} weight={700} style={{ marginTop: 2, color: tokens.accentInk }}>
+                <Mono size={9} style={{ color: t.accentInk, opacity: 0.5 }}>{label}</Mono>
+                <Body size={20} weight={700} style={{ marginTop: 2, color: t.accentInk }}>
                   {value}
                 </Body>
               </View>
@@ -376,7 +377,7 @@ export default function StatsScreen({ user, token }) {
             name={loading ? null : topArtist?.name}
             stat={loading ? null : formatArtistStat()}
             uri={loading ? undefined : (artistImageUri ?? topArtist?.albumImageUrl)}
-            onPress={() => navigation.navigate("TopArtists", { userId: user.id })}
+            onPress={() => navigation.navigate("TopArtists", { userId: user.id, range })}
           />
           <TopSplitCard
             kicker="top track"
@@ -401,7 +402,7 @@ export default function StatsScreen({ user, token }) {
                       styles.genreFill,
                       {
                         width: `${g.pct}%`,
-                        backgroundColor: i === 0 ? tokens.accent : tokens.ink,
+                        backgroundColor: i === 0 ? t.accent : t.ink,
                       },
                     ]}
                   />
@@ -419,6 +420,8 @@ export default function StatsScreen({ user, token }) {
 }
 
 function TopSplitCard({ kicker, name, stat, uri, round, onPress }) {
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <Pressable onPress={onPress} style={styles.splitCard}>
       <Box style={{ padding: 10 }}>
@@ -443,10 +446,10 @@ function TopSplitCard({ kicker, name, stat, uri, round, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -471,8 +474,8 @@ const styles = StyleSheet.create({
   metricCard: {
     padding: 16,
     marginBottom: 18,
-    backgroundColor: tokens.accent,
-    borderColor: tokens.accent,
+    backgroundColor: t.accent,
+    borderColor: t.accent,
   },
   metricGrid: {
     flexDirection: "row",
@@ -511,7 +514,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 99,
-    backgroundColor: tokens.shade,
+    backgroundColor: t.shade,
     overflow: "hidden",
   },
   genreFill: {

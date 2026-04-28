@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { tokens, fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { fetchDay } from "../../lib/supabase";
 import Mono from "../../components/ui/Mono";
 import Body from "../../components/ui/Body";
@@ -47,6 +47,8 @@ export default function DayDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { date, label, userId } = route.params;
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -106,7 +108,7 @@ export default function DayDetailScreen() {
         </Body>
 
         {loading && (
-          <ActivityIndicator color={tokens.ink3} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={t.ink3} style={{ marginTop: 40 }} />
         )}
 
         {!loading && data && (
@@ -137,7 +139,7 @@ export default function DayDetailScreen() {
                   <Mono
                     size={9}
                     style={{
-                      color: sort === opt ? tokens.accentInk : tokens.ink2,
+                      color: sort === opt ? t.accentInk : t.ink2,
                       textTransform: "none",
                     }}
                   >
@@ -195,10 +197,10 @@ export default function DayDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -220,11 +222,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: tokens.line,
+    borderColor: t.line,
   },
   chipActive: {
-    backgroundColor: tokens.accent,
-    borderColor: tokens.accent,
+    backgroundColor: t.accent,
+    borderColor: t.accent,
   },
   row: {
     flexDirection: "row",
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: tokens.line2,
+    borderTopColor: t.line2,
     borderStyle: "dashed",
   },
   footer: {

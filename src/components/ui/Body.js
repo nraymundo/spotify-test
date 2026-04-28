@@ -1,6 +1,7 @@
 import React from "react";
 import { Text } from "react-native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 const weightMap = {
   400: fonts.body,
@@ -11,13 +12,14 @@ const weightMap = {
 };
 
 export default function Body({ children, size = 13, weight = 500, dim, color, style }) {
+  const t = useTokens();
   return (
     <Text
       style={[
         {
           fontFamily: weightMap[weight] ?? fonts.body,
           fontSize: size,
-          color: color ?? (dim ? tokens.ink3 : tokens.ink),
+          color: color ?? (dim ? t.ink3 : t.ink),
         },
         style,
       ]}

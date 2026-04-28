@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 const X_LABEL_H = 16;
 
 
 export default function LineChart({ points, height = 70, fill = true, xLabels }) {
+  const t = useTokens();
   const [chartWidth, setChartWidth] = useState(0);
 
   const hasX = xLabels && xLabels.length > 0;
@@ -29,7 +31,7 @@ export default function LineChart({ points, height = 70, fill = true, xLabels })
   const labelStyle = {
     fontFamily: fonts.mono,
     fontSize: 9,
-    color: tokens.ink3,
+    color: t.ink3,
   };
 
   return (
@@ -40,10 +42,10 @@ export default function LineChart({ points, height = 70, fill = true, xLabels })
       >
         {canDraw && (
           <Svg width={chartWidth} height={svgHeight}>
-            {fill && <Path d={fillPath} fill={tokens.accent} opacity={0.18} />}
+            {fill && <Path d={fillPath} fill={t.accent} opacity={0.18} />}
             <Path
               d={path}
-              stroke={tokens.accent}
+              stroke={t.accent}
               strokeWidth={2}
               fill="none"
               strokeLinecap="round"

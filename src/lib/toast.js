@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from "react";
+import React, { createContext, useContext, useState, useRef, useCallback, useMemo } from "react";
 import { Animated, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tokens, fonts } from "./tokens";
+import { fonts } from "./tokens";
+import { useTokens } from "./theme";
 
 const ToastContext = createContext(() => {});
 
@@ -11,6 +12,8 @@ export function useToast() {
 
 function ToastView({ message, opacity }) {
   const insets = useSafeAreaInsets();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
   return (
     <Animated.View
       pointerEvents="none"
@@ -46,13 +49,13 @@ export function ToastProvider({ children }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   toast: {
     position: "absolute",
     left: 20,
     right: 20,
     zIndex: 9999,
-    backgroundColor: tokens.ink,
+    backgroundColor: t.ink,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -63,7 +66,7 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: fonts.mono,
     fontSize: 11,
-    color: tokens.bg,
+    color: t.bg,
     letterSpacing: 0.5,
     textTransform: "uppercase",
     flex: 1,

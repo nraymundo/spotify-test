@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, Platform, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
 
   async function handleAppleSignIn() {
     try {
@@ -65,10 +68,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   wordmarkContainer: {
     flex: 1,
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontFamily: "ClimateCrisis_400Regular",
     fontSize: 72,
-    color: tokens.ink,
+    color: t.ink,
     letterSpacing: -1,
   },
   buttons: {
@@ -88,27 +91,27 @@ const styles = StyleSheet.create({
   loginButton: {
     height: 56,
     borderRadius: 999,
-    backgroundColor: tokens.accent,
+    backgroundColor: t.accent,
     alignItems: "center",
     justifyContent: "center",
   },
   loginLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 17,
-    color: tokens.ink,
+    color: t.ink,
   },
   signupButton: {
     height: 56,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: tokens.ink,
+    borderColor: t.ink,
     alignItems: "center",
     justifyContent: "center",
   },
   signupLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 17,
-    color: tokens.ink,
+    color: t.ink,
   },
   appleButton: {
     height: 56,

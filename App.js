@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, StackActions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@expo-google-fonts/jetbrains-mono";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ToastProvider } from "./src/lib/toast";
+import { ThemeProvider } from "./src/lib/theme";
 import axios from "axios";
 import {
   getRefreshToken,
@@ -29,6 +30,7 @@ import {
 } from "./src/lib/spotify";
 import { getSession, onAuthStateChange, signOut } from "./src/lib/supabase";
 import HomeScreen from "./src/tabs/Home/HomeScreen";
+import SettingsScreen from "./src/tabs/Settings/SettingsScreen";
 import LoginScreen from "./src/tabs/Login/LoginScreen";
 import EmailAuthScreen from "./src/tabs/Login/EmailAuthScreen";
 import ConnectSpotifyScreen from "./src/tabs/Login/ConnectSpotifyScreen";
@@ -64,6 +66,20 @@ function MyTabs({
     >
       <Tab.Screen
         name="Home"
+        listeners={({ navigation }) => ({
+          blur: () => {
+            const tabState = navigation.getState();
+            const homeRoute = tabState.routes.find((r) => r.name === "Home");
+            const innerKey = homeRoute?.state?.key;
+            const innerIndex = homeRoute?.state?.index ?? 0;
+            if (innerKey && innerIndex > 0) {
+              navigation.dispatch({
+                ...StackActions.popToTop(),
+                target: innerKey,
+              });
+            }
+          },
+        })}
         children={() => (
           <MainStack.Navigator screenOptions={{ headerShown: false }}>
             <MainStack.Screen
@@ -80,6 +96,12 @@ function MyTabs({
                   recentlyPlayed={recentlyPlayed}
                   onLogout={onLogout}
                 />
+              )}
+            />
+            <MainStack.Screen
+              name="Settings"
+              children={() => (
+                <SettingsScreen user={user} onLogout={onLogout} />
               )}
             />
             <MainStack.Screen
@@ -103,6 +125,20 @@ function MyTabs({
       />
       <Tab.Screen
         name="Stats"
+        listeners={({ navigation }) => ({
+          blur: () => {
+            const tabState = navigation.getState();
+            const statsRoute = tabState.routes.find((r) => r.name === "Stats");
+            const innerKey = statsRoute?.state?.key;
+            const innerIndex = statsRoute?.state?.index ?? 0;
+            if (innerKey && innerIndex > 0) {
+              navigation.dispatch({
+                ...StackActions.popToTop(),
+                target: innerKey,
+              });
+            }
+          },
+        })}
         children={() => (
           <StatsStack.Navigator screenOptions={{ headerShown: false }}>
             <StatsStack.Screen
@@ -115,6 +151,20 @@ function MyTabs({
       />
       <Tab.Screen
         name="Recent"
+        listeners={({ navigation }) => ({
+          blur: () => {
+            const tabState = navigation.getState();
+            const recentRoute = tabState.routes.find((r) => r.name === "Recent");
+            const innerKey = recentRoute?.state?.key;
+            const innerIndex = recentRoute?.state?.index ?? 0;
+            if (innerKey && innerIndex > 0) {
+              navigation.dispatch({
+                ...StackActions.popToTop(),
+                target: innerKey,
+              });
+            }
+          },
+        })}
         children={() => (
           <RecentStack.Navigator screenOptions={{ headerShown: false }}>
             <RecentStack.Screen
@@ -286,8 +336,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ToastProvider>
-        <NavigationContainer>
+      <ThemeProvider>
+        <ToastProvider>
+          <NavigationContainer>
           {!supabaseSession ? (
             <AuthStack.Navigator screenOptions={{ headerShown: false }}>
               <AuthStack.Screen name="Landing" component={LoginScreen} />
@@ -312,8 +363,9 @@ export default function App() {
               onLogout={handleLogout}
             />
           )}
-        </NavigationContainer>
-      </ToastProvider>
+          </NavigationContainer>
+        </ToastProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,8 +1,10 @@
 import React from "react";
 import { Text } from "react-native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 export default function Mono({ children, size = 10, dim, style }) {
+  const t = useTokens();
   return (
     <Text
       style={[
@@ -11,7 +13,7 @@ export default function Mono({ children, size = 10, dim, style }) {
           fontSize: size,
           letterSpacing: 0.2,
           textTransform: "uppercase",
-          color: dim ? tokens.ink3 : tokens.ink2,
+          color: dim ? t.ink3 : t.ink2,
         },
         style,
       ]}

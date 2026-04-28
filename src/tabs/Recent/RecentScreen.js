@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   ScrollView,
@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 import { fetchRecent } from "../../lib/supabase";
 import Mono from "../../components/ui/Mono";
 import Body from "../../components/ui/Body";
@@ -31,6 +32,9 @@ function formatGroupKicker(day) {
 }
 
 function DayGroup({ label, kicker, plays, totalPlays, onSeeAll }) {
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
+
   // Chunk into rows of 3
   const rows = [];
   for (let i = 0; i < plays.length; i += 3) {
@@ -91,7 +95,7 @@ function DayGroup({ label, kicker, plays, totalPlays, onSeeAll }) {
         <Pressable style={styles.seeAllRow} onPress={onSeeAll}>
           <Mono
             size={10}
-            style={{ color: tokens.accent2, fontFamily: fonts.monoMedium }}
+            style={{ color: t.accent2, fontFamily: fonts.monoMedium }}
           >
             see all {totalPlays} →
           </Mono>
@@ -104,6 +108,8 @@ function DayGroup({ label, kicker, plays, totalPlays, onSeeAll }) {
 export default function RecentScreen({ user }) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const t = useTokens();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -147,18 +153,18 @@ export default function RecentScreen({ user }) {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={tokens.ink} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={t.ink} />
         }
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <Body size={26} weight={800} style={{ letterSpacing: -0.6 }}>
             Recent
           </Body>
-          {refreshing && <ActivityIndicator size="small" color={tokens.ink3} />}
+          {refreshing && <ActivityIndicator size="small" color={t.ink3} />}
         </View>
 
         {loading && (
-          <ActivityIndicator color={tokens.ink3} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={t.ink3} style={{ marginTop: 40 }} />
         )}
 
         {!loading && error && (
@@ -201,10 +207,10 @@ export default function RecentScreen({ user }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.bg,
+    backgroundColor: t.bg,
   },
   group: {
     marginBottom: 20,
@@ -224,7 +230,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: tokens.line2,
+    borderTopColor: t.line2,
     borderStyle: "dashed",
   },
 });

@@ -1,8 +1,10 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { tokens, fonts } from "../../lib/tokens";
+import { fonts } from "../../lib/tokens";
+import { useTokens } from "../../lib/theme";
 
 export default function Chip({ children, active, onPress }) {
+  const t = useTokens();
   return (
     <Pressable
       onPress={onPress}
@@ -11,7 +13,7 @@ export default function Chip({ children, active, onPress }) {
         paddingHorizontal: 10,
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: active ? tokens.accent2 : tokens.line2,
+        borderColor: active ? t.accent2 : t.line2,
         backgroundColor: active ? "rgba(88,139,139,0.22)" : "transparent",
       }}
     >
@@ -19,7 +21,7 @@ export default function Chip({ children, active, onPress }) {
         style={{
           fontFamily: fonts.bodySemibold,
           fontSize: 11,
-          color: active ? tokens.accent2 : tokens.ink2,
+          color: active ? t.accent2 : t.ink2,
         }}
       >
         {children}
