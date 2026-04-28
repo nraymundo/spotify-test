@@ -98,10 +98,58 @@ export default function StatsScreen({ user, token }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const cache = React.useRef({});
   const scrollRef = useRef(null);
+  const rangeRef = useRef(range);
+  useEffect(() => { rangeRef.current = range; }, [range]);
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
-  }, []));
+    if (!user?.id) return;
+
+    const tzOffset = new Date().getTimezoneOffset();
+    RANGES.forEach(({ key }) => {
+      if (key === rangeRef.current || cache.current[key]) return;
+      (async () => {
+        try {
+          const since = getSince(key);
+          const groupBy = key === "day" ? "hour" : key === "week" ? "day" : null;
+          const spotifyMediumTerm = key === "6mo" && token
+            ? Promise.all([
+                fetch("https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=1", { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+                fetch("https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=1", { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+              ]).catch(() => null)
+            : Promise.resolve(null);
+          const [statsData, topData, genresData, spotifyData] = await Promise.all([
+            fetchStats({ userId: user.id, since, groupBy, tzOffset }),
+            fetchTop({ userId: user.id, since }),
+            fetchGenres({ userId: user.id, since }).catch(() => ({ genres: [] })),
+            spotifyMediumTerm,
+          ]);
+          const genres = genresData?.genres ?? [];
+          let result;
+          if (key === "6mo") {
+            const has6moPolling = false;
+            const sa = spotifyData?.[0]?.items?.[0] ?? null;
+            const st = spotifyData?.[1]?.items?.[0] ?? null;
+            result = {
+              stats: has6moPolling ? statsData : null,
+              top: has6moPolling ? topData : {
+                topArtist: sa ? { name: sa.name, albumImageUrl: sa.images?.[1]?.url ?? null, plays: null, minutes: null } : null,
+                topTrack: st ? { name: st.name, albumImageUrl: st.album?.images?.[1]?.url ?? null, plays: null } : null,
+              },
+              artistImageUri: has6moPolling ? null : (sa?.images?.[1]?.url ?? null),
+              genres: has6moPolling ? genres : [],
+            };
+          } else {
+            result = { stats: statsData, top: topData, artistImageUri: topData?.topArtist?.artistImageUrl ?? null, genres };
+          }
+          if (JSON.stringify(cache.current[key]) !== JSON.stringify(result)) {
+            cache.current[key] = result;
+            SecureStore.setItemAsync(`stats_v5_${key}`, JSON.stringify(result)).catch(() => {});
+          }
+        } catch {}
+      })();
+    });
+  }, [user?.id, token]));
 
   function handlePullRefresh() {
     delete cache.current[range];
